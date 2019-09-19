@@ -16,12 +16,46 @@ const config = {
                 console.log(err);
             else
             {
-                console.log('Connected');
+                console.log('Sql Server Connected');
             }
         });
     }
 };
 
+module.exports= function (res,query,requestHeader) {
+    //Mssql de bağlantı havuzu açarak bağlantı hata var mı denetliyoruz.
+        const pool1 = new sql.ConnectionPool(config, function (err) {
+            if (err) {
+                res.send("Veritabanına bağlanma konusunda bir hata aldık! :- " + err);
+            }
+            else {
+                // Request nesnesi oluşturma kısmı
+                var request = new sql.Request(pool1);
+                // Veritabanında yapılacak sorgunun işlenmesi ve dönecek cevabın döndürülmesi 
+                request.query(query, function (err, recordset) {
+                    if (err) {
+                        console.log("Errore querying database :- " + err);
+                        res.send(404,err);
+                    }
+                    else {
+                        switch(requestHeader){
+                            case "GET": 
+                            res.status(200).send(recordset["recordset"]); break;
+                            case "INSERT":
+                            res.status(200).send("insert success.."); break;
+                            case "UPDATE":
+                            res.status(200).send("update success.."); break;
+                            case "DELETE":
+                            res.status(200).send("delete success.."); break;
+                            default: 
+                            res.status(404);
+                        }
+                    }
+                });
+            }
+        });
+    }
 
-module.exports = sql.connect(config);
+
+//module.exports = new sql.ConnectionPool(config).connect();
 
