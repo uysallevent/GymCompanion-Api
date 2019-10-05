@@ -2,34 +2,34 @@ var express = require('express');
 var router = express.Router();
 var user = require('../model/user');
 var pool = require('../helper/db');
-const sql = require('mssql')
+const sql = require('mssql');
+const bcrypt = require('bcrypt');
 
 
 router.post('/', (req, res, next) => {
-
-  console.log(req.body);
-  user = req.body;
-  pool.then((p) => {
-    p.request()
-      .input('Name', req.body.Name)
-      .input('Surname', req.body.Surname)
-      .input('Username', req.body.Username)
-      .input('Password', req.body.Password)
-      .input('Email', req.body.Email)
-      .input('Phone', req.body.Phone)
-      .input('Province', req.body.Province)
-      .input('District', req.body.District)
-      .input('BirthDate', req.body.BirthDate)
-      .query("insert into Users (Name,Surname,Username,Password,Phone,Email,Province,District,BirthDate) values (@Name,@Surname,@Username,@Password,@Email,@Phone,@Province,@District,@BirthDate)").then(result => {
-        pool.then((p) => {
-          p.request().query("select * from Users");
-        }).then(result => {
-          res.status(200).json(result["recordset"]);
-        });
-      }).catch(err => {
-        console.log(err);
-      });
+  bcrypt.hash(req.body.Password, 10, (err, hash) => {
+    pool(res, `INSERT INTO Users (Name,Surname,Username,Password,Phone,Email,Province,District,BirthDate) VALUES 
+    ( '${req.body.Name}',
+      '${req.body.Surname}',
+      '${req.body.Username}',
+      '${hash}',
+      '${req.body.Email}',
+      '${req.body.Phone}',
+      ${req.body.Province},
+      ${req.body.District},
+      '${req.body.BirthDate}')`, "INSERT");
   });
 });
 
+router.post('/login', (req, response, next) => {
+
+  pool(response, `SELECT Password FROM Users WHERE Username='${req.body.Username}'`, 'GET');
+
+
+
+  // bcrypt.compare(req.body.Password, hash).then(function (res) {
+
+
+  // });
+});
 module.exports = router;
