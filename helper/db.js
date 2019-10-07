@@ -1,4 +1,5 @@
 const sql = require('mssql');
+const responseModel = require('../model/sqlResponse');
 
 const config = {
     user: 'u8810488_gymcomp',
@@ -21,11 +22,15 @@ const config = {
     }
 };
 
-module.exports = function (res, query, requestHeader) {
+module.exports = function (query, requestHeader) {
     //Mssql de bağlantı havuzu açarak bağlantı hata var mı denetliyoruz.
     const pool1 = new sql.ConnectionPool(config, function (err) {
         if (err) {
-            res.send("Veritabanına bağlanma konusunda bir hata aldık! :-| " + err);
+            //res.send("Veritabanına bağlanma konusunda bir hata aldık! :-| " + err);
+            responseModel.statusCode = 500;
+            responseModel.message = "Veritabanına bağlanma konusunda bir hata aldık! :-| " + err;
+            responseModel.result = false;
+            return responseModel;
         }
         else {
             // Request nesnesi oluşturma kısmı
@@ -34,21 +39,44 @@ module.exports = function (res, query, requestHeader) {
             request.query(query, function (err, recordset) {
                 if (err) {
                     console.log("Error querying database :-|" + err);
-                    res.send(404, err);
+                    //res.send(404, err);
+                    responseModel.statusCode = 404;
+                    responseModel.message = "Error querying database :-|" + err;
+                    responseModel.result = false;
                 }
                 else {
                     switch (requestHeader) {
                         case "GET":
-                            res.status(200).send(recordset["recordset"]); break;
+                            //res.status(200).send(recordset["recordset"]);
+                            responseModel.statusCode = 200;
+                            responseModel.message = "OK";
+                            responseModel.result = true;
+                            responseModel.response = recordset["recordset"];
+                            break;
                         case "INSERT":
-                            res.status(200).send("OK"); break;
+                            //res.status(200).send("OK"); 
+                            responseModel.statusCode = 200;
+                            responseModel.message = "OK";
+                            responseModel.result = true;
+                            break;
                         case "UPDATE":
-                            res.status(200).send("OK"); break;
+                            //res.status(200).send("OK"); 
+                            responseModel.statusCode = 200;
+                            responseModel.message = "OK";
+                            responseModel.result = true;
+                            break;
                         case "DELETE":
-                            res.status(200).send("OK"); break;
+                            //res.status(200).send("OK"); break;
+                            responseModel.statusCode = 200;
+                            responseModel.message = "OK";
+                            responseModel.result = true;
                         default:
-                            res.status(404);
+                            //res.status(404);
+                            responseModel.statusCode = 404;
+                            responseModel.message = "Not Found";
+                            responseModel.result = false;
                     }
+                    return responseModel;
                 }
             });
         }

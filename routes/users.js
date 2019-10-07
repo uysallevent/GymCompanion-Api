@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 
 router.post('/', (req, res, next) => {
   bcrypt.hash(req.body.Password, 10, (err, hash) => {
-    pool(res, `INSERT INTO Users (Name,Surname,Username,Password,Phone,Email,Province,District,BirthDate) VALUES 
+    var result = pool(`INSERT INTO Users (Name,Surname,Username,Password,Phone,Email,Province,District,BirthDate) VALUES 
     ( '${req.body.Name}',
       '${req.body.Surname}',
       '${req.body.Username}',
@@ -18,13 +18,14 @@ router.post('/', (req, res, next) => {
       ${req.body.Province},
       ${req.body.District},
       '${req.body.BirthDate}')`, "INSERT");
+    res.json(result);
   });
 });
 
 router.post('/login', (req, response, next) => {
 
-  pool(response, `SELECT Password FROM Users WHERE Username='${req.body.Username}'`, 'GET');
-
+  var result = pool(`SELECT Password FROM Users WHERE Username='${req.body.Username}'`, 'GET');
+  response.json(result);
 
 
   // bcrypt.compare(req.body.Password, hash).then(function (res) {
